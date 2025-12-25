@@ -6,7 +6,7 @@ import model from "../../lib/gemini";
 import Markdown from "react-markdown"
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-const NewPrompt = ({data}) => {
+const NewPrompt = ({ data }) => {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -18,12 +18,11 @@ const NewPrompt = ({data}) => {
   });
 
   const chat = model.startChat({
-  history: data?.history.map(({ role, parts }) => ({
-    role,
-    parts: [{ text: parts[0].text }],
-  })),
-});
-
+    history: data?.history?.map(({ role, parts }) => ({
+      role,
+      parts: [{ text: parts[0].text }],
+    })) || [],
+  });
 
   const endRef = useRef(null);
   const formRef = useRef(null);
@@ -52,7 +51,7 @@ const NewPrompt = ({data}) => {
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["chat", data._id] }).then(() => {
-        formRef.current.reset()
+        formRef.current.reset();
         setQuestion("");
         setAnswer("");
         setImg({
@@ -69,10 +68,10 @@ const NewPrompt = ({data}) => {
     }
   });
 
-  const add = async (text , isInitial) => {
+  const add = async (text, isInitial) => {
     if (isLoading) return;
     setIsLoading(true);
-    if(!isInitial) setQuestion(text);
+    if (!isInitial) setQuestion(text);
 
     try {
       const result = await chat.sendMessageStream(
@@ -85,7 +84,7 @@ const NewPrompt = ({data}) => {
         setAnswer(accumulatedText);
       }
 
-      mutation.mutate(); // ✅ now valid
+      mutation.mutate();
     } catch (err) {
       console.error(err);
     } finally {
@@ -98,16 +97,16 @@ const NewPrompt = ({data}) => {
     const text = e.target.text.value;
     if (!text) return;
 
-    add(text , false);
+    add(text, false);
     e.target.reset();
   };
-const hasRun = useRef(false);
-  useEffect(() =>{
-    if(data?.history?.length === 1){
-      add(data.history[0].parts[0].text , true)
+
+  useEffect(() => {
+    if (data?.history?.length === 1) {
+      add(data.history[0].parts[0].text, true);
     }
-    hasRun.current = true;
-},[]);
+  }, []);
+
   return (
     <>
       {img.isLoading && <div>Loading...</div>}
